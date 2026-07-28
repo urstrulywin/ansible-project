@@ -22,4 +22,4 @@
       service:
         name: mongod
         state: started
-        enable: yes
+        enabled: yes
