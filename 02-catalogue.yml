@@ -66,9 +66,8 @@
         login_host: "{{ MONGODB_HOST }}"
         # login_user: "{{ MONGODB_USER }}"  # Optional, if auth is required
         # login_password: "{{ MONGODB_PASSWORD }}"  # Optional, if auth is required
-        database: admin
-        commands:
-          - "db.getMongo().getDBNames().indexOf('catalogue')"
+        db: admin
+        eval: "db.getMongo().getDBNames().indexOf('catalogue')"
       register: db_check
 
     - name: Debug result
