@@ -18,9 +18,11 @@
     - name: Get temporary root password
       shell: grep 'A temporary password is generated for root@localhost' /var/log/mysqld.log | awk -F ' ' '{print $NF}'
       register: temp_root_password
+      tags: set-root-password
 
     - name: Update expired root password
       community.mysql.mysql_query:
         login_user: root
         login_password: "{{ temp_root_password.stdout }}"
         query: "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}'"
+      tags: set-root-password
