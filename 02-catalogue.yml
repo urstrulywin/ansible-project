@@ -61,27 +61,26 @@
         name: mongodb-mongosh
         state: present
 
-    - name: Gather MongoDB info
-      community.mongodb.mongodb_info:
-        login_host: "{{ MONGODB_HOST }}"
-        # login_user / login_password if auth enabled
-      register: mongo_info
+    - name: check catalogue database exists or not
+      ansible.builtin.shell: >
+        mongosh --host "{{ MONGODB_HOST }}" --quiet
+        --eval 'db.getMongo().getDBNames().includes("catalogue")'
+      register: catalogue_output
+      changed_when: false
+      tags:
+        - mongodb
 
-    - name: Debug raw info (run once to confirm structure)
-      debug:
-        var: mongo_info.databases
+    - name: print catalogue_output
+      ansible.builtin.debug:
+        msg: "{{ catalogue_output.stdout }}"
+      tags:
+        - mongodb
 
-    - name: Check if catalogue database exists
-      debug:
-        msg: "Database 'catalogue' exists."
-      when: "'catalogue' in (mongo_info.databases | map(attribute='name') | list)"
-
-    - name: Load products into MongoDB
-      community.mongodb.mongodb_shell:
-        database: catalogue
-        shell_command: mongosh
-        script: /app/db/master-data.js
-      when: db_check.results[0].stdout | int < 0
+    - name: load products
+      ansible.builtin.shell: mongosh --host "{{ MONGODB_HOST }}" < /app/db/master-data.js
+      when: catalogue_output.stdout | trim != "true"
+      tags:
+        - mongodb
 
     - name: Enable and start service with daemon reload
       ansible.builtin.systemd_service:
