@@ -25,4 +25,4 @@
     - name: set mysql root password
       command: mysqladmin -u root password '{{ mysql_root_password }}'
       when: mysql_root_pass_check.rc != 0
-      no_log: true
+      # no_log: true
