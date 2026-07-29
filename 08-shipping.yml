@@ -67,6 +67,7 @@
         - schema.sql
         - app-user.sql
         - master-data.sql
+      no_log: yes
 
     - name: Enable and start service with daemon reload
       ansible.builtin.systemd_service:
