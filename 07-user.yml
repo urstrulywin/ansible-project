@@ -1,0 +1,59 @@
+- name: configure user server
+  hosts: user
+  become: yes
+  tasks:
+    - name: install nodejs
+      package:
+        name: nodejs
+        state: present
+
+    - name: add project system user
+      user:
+        name: project
+        system: yes
+        home: /app
+        shell: /sbin/nologin
+        comment: project system usr
+
+    - name: remove app directory
+      file:
+        path: /app
+        state: absent
+
+    - name: delete user.zip in /tmp
+      file:
+        path: /tmp/user.zip
+        state: absent
+
+    - name: create app directory
+      file:
+        path: /app
+        state: directory
+
+    - name: download user zip file
+      get_url:
+        url: https://roboshop-artifacts.s3.amazonaws.com/user-v3.zip
+        dest: /tmp/user.zip
+
+    - name: unzip user file
+      unarchive:
+        src: /tmp/user.zip
+        dest: /app
+        remote_src: yes # the zip file is on the remote target host (user). ansible server is local here.
+
+    - name: Install npm dependencies
+      community.general.npm:
+        path: /app
+        #state: present # defaults to present
+
+    - name: copy user.service
+      template:
+        src: user.service.j2
+        dest: /etc/systemd/system/user.service
+
+    - name: Enable and start service with daemon reload
+      ansible.builtin.systemd_service:
+        name: user
+        state: started
+        enabled: yes
+        daemon_reload: yes

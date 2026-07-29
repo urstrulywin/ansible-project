@@ -1,0 +1,80 @@
+- name: configure Shipping server
+  hosts: shipping
+  become: yes
+  tasks:
+    - name: Install Maven
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - maven
+        - mysql
+
+    - name: add project system user
+      user:
+        name: project
+        system: yes
+        home: /app
+        shell: /sbin/nologin
+        comment: project system usr
+
+    - name: remove app directory
+      file:
+        path: /app
+        state: absent
+
+    - name: delete shipping.zip in /tmp
+      file:
+        path: /tmp/shipping.zip
+        state: absent
+
+    - name: create app directory
+      file:
+        path: /app
+        state: directory
+
+    - name: download shipping zip file
+      get_url:
+        url: https://roboshop-artifacts.s3.amazonaws.com/shipping-v3.zip
+        dest: /tmp/shipping.zip
+
+    - name: unzip shipping file
+      unarchive:
+        src: /tmp/shipping.zip
+        dest: /app
+        remote_src: yes # the zip file is on the remote target host (catalogue). ansible server is local here.
+
+    - name: Install dependencies & build the application
+      command: mvn clean package
+      args:
+        chdir: /app
+
+    - name: Move n Rename shipping-1.0.jar file
+      command: mv target/shipping-1.0.jar shipping.jar
+      args:
+        chdir: /app
+
+    - name: copy shipping.service.j2
+      template:
+        src: shipping.service.j2
+        dest: /etc/systemd/system/shipping.service
+
+    - name: load mysql data
+      community.mysql.mysql_db:
+        state: import
+        name: all
+        login_user: root
+        login_password: RoboShop@1
+        login_host: "{{ MYSQL_HOST }}"
+        target: "{{ item }}"
+      loop:
+        - /app/db/schema.sql
+        - /app/db/app-user.sql
+        - /app/db/master-data.sql
+
+    - name: Enable and start service with daemon reload
+      ansible.builtin.systemd_service:
+        name: shipping
+        state: started
+        enabled: yes
+        daemon_reload: yes

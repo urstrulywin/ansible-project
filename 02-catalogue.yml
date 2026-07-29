@@ -68,7 +68,7 @@
       register: catalogue_output
       changed_when: false
       tags:
-        - mongodb
+        - mongodb # tag lets you selectively run just the tasks with the same tag
 
     - name: print catalogue_output
       ansible.builtin.debug:

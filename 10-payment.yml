@@ -1,0 +1,65 @@
+- name: Configure Payment server
+  hosts: payment
+  become: yes
+  tasks:
+    - name: Install Python Packages
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - python3
+        - gcc
+        - python3-devel
+
+    - name: Add project system user
+      user:
+        name: project
+        system: yes
+        home: /app
+        shell: /sbin/nologin
+        comment: project system usr
+
+    - name: Remove app directory
+      file:
+        path: /app/*
+        state: absent
+
+    - name: Delete payment.zip in /tmp
+      file:
+        path: /tmp/payment.zip
+        state: absent
+
+    # - name: create app directory
+    #   file:
+    #     path: /app
+    #     state: directory
+
+    - name: Download payment.zip file
+      get_url:
+        url: https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip
+        dest: /tmp/payment.zip
+
+    - name: unzip payment file
+      unarchive:
+        src: /tmp/payment.zip
+        dest: /app
+        remote_src: yes # the zip file is on the remote target host (catalogue). ansible server is local here.
+
+    - name: Install dependencies
+      pip:
+        requirements: requirements.txt
+        executable: pip3.9
+      args:
+        chdir: /app
+
+    - name: Copy payment.service.j2
+      template:
+        src: payment.service.j2
+        dest: /etc/systemd/system/payment.service
+
+    - name: Enable and Start service with daemon reload
+      ansible.builtin.systemd_service:
+        name: shipping
+        state: started
+        enabled: yes
+        daemon_reload: yes

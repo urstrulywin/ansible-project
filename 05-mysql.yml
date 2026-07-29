@@ -1,0 +1,29 @@
+- name: configure mysql server
+  hosts: mysql
+  become: yes
+  tasks:
+    - name: install mysql server
+      package:
+        name: mysql-server
+        state: present
+
+    - name: start n enable mysql server
+      service:
+        name: "{{ 'mysqld' if ansible_os_family == 'RedHat' else 'mysql' }}"
+        state: started
+        enabled: yes
+
+    - name: setup root password
+      command: mysql_secure_installation --set-root-pass RoboShop@1
+
+    # - name: check if mysql root password is already set
+    #   command: mysqladmin -u root -p'{{ mysql_root_password }}' status
+    #   register: mysql_root_pass_check
+    #   ignore_errors: yes
+    #   changed_when: false
+    #   no_log: true
+
+    #   - name: set mysql root password
+    #   command: mysqladmin -u root password '{{ mysql_root_password }}'
+    #   when: mysql_root_pass_check.rc != 0
+    #   no_log: true
