@@ -8,7 +8,7 @@
         state: present
 
     - name: add project system cart
-      cart:
+      user:
         name: project
         system: yes
         home: /app
