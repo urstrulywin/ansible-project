@@ -61,18 +61,20 @@
         name: mongodb-mongosh
         state: present
 
-    - name: Check if catalogue database exists
-      community.mongodb.mongodb_shell:
+    - name: Gather MongoDB info
+      community.mongodb.mongodb_info:
         login_host: "{{ MONGODB_HOST }}"
-        # login_user: "{{ MONGODB_USER }}"  # Optional, if auth is required
-        # login_password: "{{ MONGODB_PASSWORD }}"  # Optional, if auth is required
-        db: admin
-        eval: "db.getMongo().getDBNames().indexOf('catalogue')"
-      register: db_check
+        # login_user / login_password if auth enabled
+      register: mongo_info
 
-    - name: Debug result
+    - name: Debug raw info (run once to confirm structure)
       debug:
-        msg: "Catalogue database exists: {{ db_check.results[0].stdout | int >= 0 }}"
+        var: mongo_info.databases
+
+    - name: Check if catalogue database exists
+      debug:
+        msg: "Database 'catalogue' exists."
+      when: "'catalogue' in (mongo_info.databases | map(attribute='name') | list)"
 
     - name: Load products into MongoDB
       community.mongodb.mongodb_shell:
