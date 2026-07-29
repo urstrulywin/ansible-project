@@ -7,7 +7,7 @@
         name: nodejs
         state: present
 
-    - name: add project system cart
+    - name: add project system user
       user:
         name: project
         system: yes
