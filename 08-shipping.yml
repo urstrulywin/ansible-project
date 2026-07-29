@@ -60,17 +60,13 @@
         dest: /etc/systemd/system/shipping.service
 
     - name: load mysql data
-      community.mysql.mysql_db:
-        state: import
-        name: all
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-        login_host: "{{ MYSQL_HOST }}"
-        target: "{{ item }}"
+      shell: mysql -h {{ MYSQL_HOST }} -uroot -p{{ mysql_root_password }} < {{ item }}
+      args:
+        chdir: /app/db
       loop:
-        - /app/db/schema.sql
-        - /app/db/app-user.sql
-        - /app/db/master-data.sql
+        - schema.sql
+        - app-user.sql
+        - master-data.sql
 
     - name: Enable and start service with daemon reload
       ansible.builtin.systemd_service:
