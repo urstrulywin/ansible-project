@@ -15,14 +15,18 @@
 
     # - name: setup root password
     #   command: mysql_secure_installation --set-root-pass '{{ mysql_root_password }}'
+
     - name: Get temporary root password
       shell: grep 'A temporary password is generated for root@localhost' /var/log/mysqld.log | awk -F ' ' '{print $NF}'
       register: temp_root_password
+      changed_when: false
       tags: set-root-password
 
     - name: Update expired root password
-      community.mysql.mysql_query:
-        login_user: root
-        login_password: "{{ temp_root_password.stdout }}"
-        query: "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}'"
+      command: >
+        mysql --connect-expired-password
+        -uroot -p'{{ temp_root_password.stdout }}'
+        -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}';"
+      when: temp_root_password.stdout != ""
+      no_log: true
       tags: set-root-password
