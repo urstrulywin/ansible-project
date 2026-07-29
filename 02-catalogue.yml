@@ -9,6 +9,7 @@
 
     - name: add project system user
       user:
+        name: project
         system: yes
         home: /app
         shell: /sbin/nologin
