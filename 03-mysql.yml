@@ -35,4 +35,4 @@
     - name: allow root remote access
       shell: |
         mysql -uroot -p{{ mysql_root_password }} -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '{{ mysql_root_password }}'; GRANT ALL PRIVILEGES ON *.* WITH GRANT OPTION TO 'root'@'%'; FLUSH PRIVILEGES;"
-      no_log: true
+      # no_log: true
