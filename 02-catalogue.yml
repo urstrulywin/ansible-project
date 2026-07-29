@@ -1,0 +1,89 @@
+- name: configure catalogue server
+  hosts: catalogue
+  become: yes
+  tasks:
+    - name: install nodejs
+      package:
+        name: nodejs
+        state: present
+
+    - name: add project system user
+      user:
+        system: yes
+        home: /app
+        shell: /sbin/nologin
+        comment: project system usr
+
+    - name: remove app directory
+      file:
+        path: /app
+        state: absent
+
+    - name: delete catalogue.zip in /tmp
+      file:
+        path: /tmp/catalogue.zip
+        state: absent
+
+    - name: create app directory
+      file:
+        path: /app
+        state: directory
+
+    - name: download catalogue zip file
+      get_url:
+        url: https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip
+        dest: /tmp/catalogue.zip
+
+    - name: unzip catalogue file
+      unarchive:
+        src: /tmp/catalogue.zip
+        dest: /app
+        remote_src: yes # the zip file is on the remote target host (catalogue). ansible server is local here.
+
+    - name: Install npm dependencies
+      community.general.npm:
+        path: /app
+        #state: present # defaults to present
+
+    - name: copy catalogue.service
+      template:
+        src: catalogue.service.j2
+        dest: /etc/systemd/system/catalogue.service
+
+    - name: copy mongo repo
+      copy:
+        src: mongo.repo
+        dest: /etc/yum.repos.d/mongo.repo
+
+    - name: install mongodb client - mongodb-mongosh
+      package:
+        name: mongodb-mongosh
+        state: present
+
+    - name: Check if catalogue database exists
+      community.mongodb.mongodb_shell:
+        login_host: "{{ MONGODB_HOST }}"
+        # login_user: "{{ MONGODB_USER }}"  # Optional, if auth is required
+        # login_password: "{{ MONGODB_PASSWORD }}"  # Optional, if auth is required
+        database: admin
+        commands:
+          - "db.getMongo().getDBNames().indexOf('catalogue')"
+      register: db_check
+
+    - name: Debug result
+      debug:
+        msg: "Catalogue database exists: {{ db_check.results[0].stdout | int >= 0 }}"
+
+    - name: Load products into MongoDB
+      community.mongodb.mongodb_shell:
+        database: catalogue
+        shell_command: mongosh
+        script: /app/db/master-data.js
+      when: db_check.results[0].stdout | int < 0
+
+    - name: Enable and start service with daemon reload
+      ansible.builtin.systemd_service:
+        name: catalogue
+        state: started
+        enabled: yes
+        daemon_reload: yes
