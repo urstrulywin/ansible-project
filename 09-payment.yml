@@ -40,6 +40,7 @@
         paths: app
         file_type: any
       register: app_contents
+      tags: delete-app-content
 
     - name: Delete all found contents
       ansible.builtin.file:
