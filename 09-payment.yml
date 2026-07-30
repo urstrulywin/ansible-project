@@ -49,10 +49,10 @@
       loop: "{{ app_contents.files }}"
       tags: delete-app-content
 
-    - name: create app directory
-      file:
-        path: /app
-        state: directory
+    # - name: create app directory
+    #   file:
+    #     path: /app
+    #     state: directory
 
     - name: unzip payment file
       unarchive:
