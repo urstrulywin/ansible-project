@@ -46,6 +46,7 @@
         path: "{{ item.path }}"
         state: absent
       loop: "{{ app_contents.files }}"
+      tags: delete-app-content
 
     - name: create app directory
       file:
