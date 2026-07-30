@@ -23,6 +23,7 @@
       file:
         path: /app/* # path: /app/*  will this work ?
         state: absent
+      tags: app-content
 
     - name: Delete payment.zip in /tmp
       file:
