@@ -30,6 +30,11 @@
         url: https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip
         dest: /tmp/payment.zip
 
+    # - name: create app directory
+    #   file:
+    #     path: /app
+    #     state: directory
+
     - name: create app directory
       file:
         path: /app
@@ -50,11 +55,6 @@
         state: absent
       loop: "{{ app_contents.files }}"
       tags: delete-app-content
-
-    # - name: create app directory
-    #   file:
-    #     path: /app
-    #     state: directory
 
     - name: unzip payment file
       unarchive:
