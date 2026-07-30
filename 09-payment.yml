@@ -21,7 +21,7 @@
 
     - name: Remove app directory
       file:
-        path: /app/ # path: /app/*  will this work ?
+        path: /app/* # path: /app/*  will this work ?
         state: absent
 
     - name: Delete payment.zip in /tmp
