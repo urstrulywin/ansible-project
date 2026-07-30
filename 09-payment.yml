@@ -18,12 +18,7 @@
         home: /app
         shell: /sbin/nologin
         comment: project system usr
-
-    # - name: Remove app directory
-    #   file:
-    #     path: /app/* # path: /app/*  will this work ?
-    #     state: absent
-    #   tags: app-content
+        create_home: no # defaults to yes
 
     - name: Delete payment.zip in /tmp
       file:
@@ -34,6 +29,13 @@
       get_url:
         url: https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip
         dest: /tmp/payment.zip
+
+    - name: create app directory
+      file:
+        path: /app
+        state: directory
+        owner: project
+        group: project
 
     - name: Find all contents in app directory
       ansible.builtin.find:
