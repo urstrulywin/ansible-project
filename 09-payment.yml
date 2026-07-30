@@ -37,7 +37,7 @@
 
     - name: Find all contents in app directory
       ansible.builtin.find:
-        paths: app
+        paths: /app
         file_type: any
       register: app_contents
       tags: delete-app-content
