@@ -30,6 +30,7 @@
           - botocore
         executable: pip3
       become: true
+
     - name: create ec2 instances
       amazon.aws.ec2_instance:
         instance_type: t3.micro
@@ -46,7 +47,7 @@
         zone: "{{ domain_name }}"
         record: "{{ item.item }}.{{ domain_name }}"
         type: A
-        ttl: 300
+        ttl: 1
         value: "{{ item.instances[0].private_ip_address }}"
       loop: "{{ ec2_output.results }}"
       when: action == "create"
