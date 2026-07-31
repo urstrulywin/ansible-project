@@ -7,11 +7,6 @@
         name: nginx
         state: present
 
-    - name: remove default nginx directory (html dir)
-      file:
-        path: /usr/share/nginx/html/
-        state: absent
-
     - name: delete frontend.zip in /tmp
       file:
         path: /tmp/frontend.zip
@@ -22,10 +17,19 @@
         url: https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
         dest: /tmp/frontend.zip
 
-    - name: add default nginx directory (html dir)
-      file:
-        path: /usr/share/nginx/html/
-        state: directory
+    - name: Find all contents in default nginx directory (html dir)
+      ansible.builtin.find:
+        paths: /usr/share/nginx/html/
+        file_type: any
+      register: nginx_contents
+      tags: delete-nginx-content
+
+    - name: Delete all found contents
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ nginx_contents.files }}"
+      tags: delete-nginx-content
 
     - name: unzip frontend file
       unarchive:
